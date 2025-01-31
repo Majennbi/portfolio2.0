@@ -8,21 +8,21 @@ use App\Repository\ProjectsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class SkillController extends AbstractController
 {
     #[Route('/api/skills', name: 'skills', methods: ['GET'])]
     public function getAllSkills(SkillsRepository $skillsRepository, SerializerInterface $serializer): JsonResponse
     {
-
         $allSkills = $skillsRepository->findAll();
         $jsonAllSkills = $serializer->serialize($allSkills, 'json', ['groups' => 'getSkills']);
 
@@ -38,20 +38,16 @@ final class SkillController extends AbstractController
     public function getSkillById(int $id, SkillsRepository $skillsRepository, SerializerInterface $serializer): JsonResponse
     {
         $skill = $skillsRepository->find($id);
-        if ($skill) {
-            $jsonSkill = $serializer->serialize($skill, 'json', ['groups' => 'getSkills']);
-            return new JsonResponse(
-                $jsonSkill,
-                Response::HTTP_OK,
-                [],
-                true
-            );
+        if (!$skill) {
+            throw new NotFoundHttpException('Skill not found');
         }
 
+        $jsonSkill = $serializer->serialize($skill, 'json', ['groups' => 'getSkills']);
         return new JsonResponse(
-            null,
-            Response::HTTP_NOT_FOUND,
-            []
+            $jsonSkill,
+            Response::HTTP_OK,
+            [],
+            true
         );
     }
 
@@ -60,7 +56,7 @@ final class SkillController extends AbstractController
     {
         $skill = $skillsRepository->find($id);
         if (!$skill) {
-            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+            throw new NotFoundHttpException('Skill not found');
         }
         $em->remove($skill);
         $em->flush();
@@ -73,7 +69,8 @@ final class SkillController extends AbstractController
         SerializerInterface $serializer,
         EntityManagerInterface $em,
         UrlGeneratorInterface $urlGenerator,
-        ProjectsRepository $projectsRepository
+        ProjectsRepository $projectsRepository,
+        ValidatorInterface $validator
     ): JsonResponse {
         $context = [
             'datetime_format' => 'Y-m-d H:i:s',
@@ -82,14 +79,20 @@ final class SkillController extends AbstractController
 
         $skill = $serializer->deserialize($request->getContent(), Skills::class, 'json', $context);
 
-        //Récupération de l'ensemble des données envoyées sous forme de tableau
+        $errors = $validator->validate($skill);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
+
+        // Récupération de l'ensemble des données envoyées sous forme de tableau
         $content = $request->toArray();
 
-        //Récupération de l'idSkill. S'il n'est pas défini, alors on met -1 par défaut.
+        // Récupération de l'idSkill. S'il n'est pas défini, alors on met -1 par défaut.
         $idProjects = $content['idProjects'] ?? -1;
 
-        //On cherche le skill correspondant à l'idSkill et on l'ajoute au projet
-        //Si "find" ne trouve pas de skill correspondant, alors $skill sera null
+        // On cherche le skill correspondant à l'idSkill et on l'ajoute au projet
+        // Si "find" ne trouve pas de skill correspondant, alors $skill sera null
         $skill->setProjects(new ArrayCollection([$projectsRepository->find($idProjects)]));
 
         $em->persist($skill);
@@ -112,7 +115,8 @@ final class SkillController extends AbstractController
         SerializerInterface $serializer,
         Skills $currentSkill,
         EntityManagerInterface $em,
-        ProjectsRepository $projectsRepository
+        ProjectsRepository $projectsRepository,
+        ValidatorInterface $validator
     ): JsonResponse {
         $updatedSkill = $serializer->deserialize(
             $request->getContent(),
@@ -120,6 +124,12 @@ final class SkillController extends AbstractController
             'json',
             [AbstractNormalizer::OBJECT_TO_POPULATE => $currentSkill]
         );
+
+        $errors = $validator->validate($updatedSkill);
+
+        if ($errors->count() > 0) {
+            return new JsonResponse($serializer->serialize($errors, 'json'), JsonResponse::HTTP_BAD_REQUEST, [], true);
+        }
 
         $content = $request->toArray();
         $idProjects = $content['idProjects'] ?? -1;

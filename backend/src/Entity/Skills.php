@@ -7,6 +7,7 @@ use App\Repository\SkillsRepository;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: SkillsRepository::class)]
 class Skills
@@ -18,18 +19,25 @@ class Skills
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
+    #[Assert\NotBlank(message: 'Name is required')]
+    #[Assert\Length(max: 100, maxMessage: 'Name cannot be longer than {{ limit }} characters')]
     #[Groups(["getProjects", "getSkills"])]
     private ?string $Name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\Length(max: 255, maxMessage: 'Icon cannot be longer than {{ limit }} characters')]
     #[Groups(["getProjects", "getSkills"])]
     private ?string $Icon = null;
 
     #[ORM\Column(length: 100)]
+    #[Assert\NotBlank(message: 'Level is required')]
+    #[Assert\Length(max: 100, maxMessage: 'Level cannot be longer than {{ limit }} characters')]
     #[Groups(["getProjects", "getSkills"])]
     private ?string $Level = null;
 
     #[ORM\Column]
+    #[Assert\NotNull(message: 'CreatedAt is required')]
+    #[Assert\Type(\DateTimeImmutable::class, message: 'CreatedAt must be a valid datetime')]
     #[Groups(["getProjects", "getSkills"])]
     private ?\DateTimeImmutable $CreatedAt = null;
 
