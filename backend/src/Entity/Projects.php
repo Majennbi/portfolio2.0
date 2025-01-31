@@ -151,6 +151,13 @@ class Projects
         return $this->skills;
     }
 
+    public function setSkills(?Collection $skills): static
+    {
+        $this->skills = $skills ?? new ArrayCollection();
+
+        return $this;
+    }
+
     public function addSkill(Skills $skill): static
     {
         if (!$this->skills->contains($skill)) {
