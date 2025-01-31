@@ -14,35 +14,35 @@ class Projects
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getProjects"])]
+    #[Groups(["getProjects", "getSkills"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
-    #[Groups(["getProjects"])]
+    #[Groups(["getProjects", "getSkills"])]
     private ?string $Title = null;
 
     #[ORM\Column(length: 1000, nullable: true)]
-    #[Groups(["getProjects"])]
+    #[Groups(["getProjects", "getSkills"])]
     private ?string $Description = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getProjects"])]
+    #[Groups(["getProjects", "getSkills"])]
     private ?string $Image = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getProjects"])]
+    #[Groups(["getProjects", "getSkills"])]
     private ?string $Link = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getProjects"])]
+    #[Groups(["getProjects", "getSkills"])]
     private ?string $Duration = null;
 
     #[ORM\Column]
-    #[Groups(["getProjects"])]
+    #[Groups(["getProjects", "getSkills"])]
     private ?\DateTimeImmutable $CreatedAt = null;
 
     #[ORM\Column]
-    #[Groups(["getProjects"])]
+    #[Groups(["getProjects", "getSkills"])]
     private ?\DateTimeImmutable $UpdatedAt = null;
 
     #[ORM\ManyToMany(targetEntity: Skills::class, inversedBy: 'projects')]

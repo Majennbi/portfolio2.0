@@ -14,26 +14,27 @@ class Skills
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getProjects"])]
+    #[Groups(["getProjects", "getSkills"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
-    #[Groups(["getProjects"])]
+    #[Groups(["getProjects", "getSkills"])]
     private ?string $Name = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["getProjects"])]
+    #[Groups(["getProjects", "getSkills"])]
     private ?string $Icon = null;
 
     #[ORM\Column(length: 100)]
-    #[Groups(["getProjects"])]
+    #[Groups(["getProjects", "getSkills"])]
     private ?string $Level = null;
 
     #[ORM\Column]
-    #[Groups(["getProjects"])]
+    #[Groups(["getProjects", "getSkills"])]
     private ?\DateTimeImmutable $CreatedAt = null;
 
     #[ORM\ManyToMany(targetEntity: Projects::class, mappedBy: 'skills')]
+    #[Groups(["getSkills"])]
     private Collection $projects;
 
     public function __construct()
@@ -100,6 +101,13 @@ class Skills
     public function getProjects(): Collection
     {
         return $this->projects;
+    }
+
+    public function setProjects(?Collection $projects): static
+    {
+        $this->projects = $projects ?? new ArrayCollection();
+
+        return $this;
     }
 
     public function addProject(Projects $project): static
