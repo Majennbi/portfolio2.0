@@ -2,16 +2,41 @@
 
 namespace App\DataFixtures;
 
-use App\Entity\Projects;
+use App\Entity\User;
 use App\Entity\Skills;
-use Doctrine\Bundle\FixturesBundle\Fixture;
-use Doctrine\Persistence\ObjectManager;
 use DateTimeImmutable;
+use App\Entity\Projects;
+use Doctrine\Persistence\ObjectManager;
+use Doctrine\Bundle\FixturesBundle\Fixture;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AppFixtures extends Fixture
 {
+    private UserPasswordHasherInterface $userPasswordHasher;
+
+    public function __construct(UserPasswordHasherInterface $userPasswordHasher)
+    {
+        $this->userPasswordHasher = $userPasswordHasher;
+    }
+
     public function load(ObjectManager $manager): void
     {
+        // Créer des users "Visiteurs"
+        $user = new User();
+        $user->setEmail('visiteur@visiteur.fr');
+        $user->setRoles(['ROLE_VISITEUR']);
+        $user->setPassword($this->userPasswordHasher->hashPassword($user, 'visiteur'));
+
+        $manager->persist($user);
+
+        // Créer des users "Admin"
+        $user = new User();
+        $user->setEmail('admin@admin.fr');
+        $user->setRoles(['ROLE_ADMIN']);
+        $user->setPassword($this->userPasswordHasher->hashPassword($user, 'admin'));
+
+        $manager->persist($user);
+
         // Créer des compétences (skills)
         $skills = [];
         for ($i = 1; $i <= 5; $i++) {

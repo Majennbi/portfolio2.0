@@ -12,6 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
@@ -21,9 +22,12 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 final class ProjectController extends AbstractController
 {
     #[Route('/api/projects', name: 'project', methods: ['GET'])]
-    public function getAllProjects(ProjectsRepository $projectsRepository, SerializerInterface $serializer): JsonResponse
+    public function getAllProjects(ProjectsRepository $projectsRepository, SerializerInterface $serializer,
+    Request $request): JsonResponse
     {
-        $allProjects = $projectsRepository->findAll();
+        $page = $request->get('page', 1);
+        $limit = $request->get('limit', 3);
+        $allProjects = $projectsRepository->findAllWithPagination($page, $limit);
         $jsonAllProjects = $serializer->serialize($allProjects, 'json', ['groups' => 'getProjects']);
 
         return new JsonResponse(
@@ -63,6 +67,7 @@ final class ProjectController extends AbstractController
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
+    #[IsGranted('ROLE_ADMIN', message: 'Only admin can add a project')]
     #[Route('/api/projects', name: 'addProject', methods: ['POST'])]
     public function addProject(
         Request $request,
